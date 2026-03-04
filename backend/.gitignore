@@ -1,0 +1,24 @@
+/quishi
+
+.quishi
+.venv
+__pycache__
+*.pyc
+*.pyo
+
+# Ignore the .env file containing environment variables
+.env
+
+.env.example
+# Ignore the .vscode directory containing Visual Studio Code settings
+.vscode
+
+# Ignore the .idea directory containing JetBrains IDE settings
+.idea
+
+# Ignore the .pytest_cache directory containing pytest cache files
+.pytest_cache
+
+# Ignore the .mypy_cache directory containing mypy cache files
+.mypy_cache
+
