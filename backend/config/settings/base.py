@@ -83,7 +83,14 @@ TEMPLATES = [
 
 # ── Database ───────────────────────────────────────────────────────────────────
 DATABASES = {
-    "default": env.db("DATABASE_URL", default="postgres://localhost/smart_realty")
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_NAME"),
+        "USER": env("DB_USER"),
+        "PASSWORD": env("DB_PASSWORD"),
+        "HOST": env("DB_HOST", default="localhost"),
+        "PORT": env("DB_PORT", default="5432"),
+    }
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -200,3 +207,8 @@ USE_TZ        = True
 SECURE_BROWSER_XSS_FILTER   = True
 X_FRAME_OPTIONS             = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+
+
+print("DB_USER:", env("DB_USER", default="NOT FOUND"))
+print("DB_PASSWORD:", env("DB_PASSWORD", default="NOT FOUND"))
