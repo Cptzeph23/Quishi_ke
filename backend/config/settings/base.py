@@ -210,5 +210,3 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
 
-print("DB_USER:", env("DB_USER", default="NOT FOUND"))
-print("DB_PASSWORD:", env("DB_PASSWORD", default="NOT FOUND"))
