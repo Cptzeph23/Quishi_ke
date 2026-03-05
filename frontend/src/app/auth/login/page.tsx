@@ -1,7 +1,7 @@
 "use client";
 /**
  * FILE:    frontend/src/app/auth/login/page.tsx
- * PURPOSE: Sign-in page — email + password, RHF + Zod, split layout
+ * PURPOSE: Sign-in page — surfaces real server error messages in toast
  */
 import { useState } from "react";
 import Link from "next/link";
@@ -20,6 +20,18 @@ const schema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 type FormValues = z.infer<typeof schema>;
+
+/** Extract the most useful message from an axios error */
+function extractError(err: any): string {
+  const d = err?.response?.data;
+  if (!d) return `Network error — is the backend running? (${err?.message ?? "unknown"})`;
+  if (typeof d === "string")          return d;
+  if (d.detail)                       return d.detail;
+  if (d.non_field_errors)             return d.non_field_errors[0];
+  const first = Object.values(d)[0];
+  if (Array.isArray(first))           return first[0] as string;
+  return "Login failed. Please check your credentials.";
+}
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -41,8 +53,8 @@ export default function LoginPage() {
         user?.role === "agent" ? "/dashboard/agent" :
         "/properties";
       router.push(dest);
-    } catch {
-      toast.error("Invalid email or password.");
+    } catch (err: any) {
+      toast.error(extractError(err));
     } finally {
       setIsPending(false);
     }
@@ -97,23 +109,19 @@ export default function LoginPage() {
           </h1>
           <p className="text-gray-500 text-sm mb-8">Sign in to your account to continue.</p>
 
+          {/* Dev hint */}
+          <div className="mb-5 p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-700">
+            <strong>Dev credentials:</strong> admin@smartrealty.dev / Admin@1234<br/>
+            (run <code>python manage.py seed_users</code> if not seeded yet)
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-            <Input
-              label="Email address"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              leftIcon={<Mail size={15} />}
-              error={errors.email?.message}
-              {...register("email")}
-            />
-            <Input
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="••••••••"
-              leftIcon={<Lock size={15} />}
-              error={errors.password?.message}
+            <Input label="Email address" type="email" autoComplete="email"
+              placeholder="you@example.com" leftIcon={<Mail size={15} />}
+              error={errors.email?.message} {...register("email")} />
+            <Input label="Password" type={showPassword ? "text" : "password"}
+              autoComplete="current-password" placeholder="••••••••"
+              leftIcon={<Lock size={15} />} error={errors.password?.message}
               rightSlot={
                 <button type="button" tabIndex={-1}
                   onClick={() => setShowPassword((s) => !s)}
@@ -121,17 +129,14 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               }
-              {...register("password")}
-            />
+              {...register("password")} />
             <div className="flex justify-end">
               <Link href="/auth/forgot-password"
                 className="text-xs text-brand-600 hover:text-brand-700 font-medium">
                 Forgot password?
               </Link>
             </div>
-            <Button type="submit" loading={isPending} fullWidth size="lg">
-              Sign in
-            </Button>
+            <Button type="submit" loading={isPending} fullWidth size="lg">Sign in</Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-500">
