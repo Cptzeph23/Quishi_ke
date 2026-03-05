@@ -1,3 +1,4 @@
+"use client";
 /**
  * FILE:    frontend/src/lib/api/auth.ts
  * PURPOSE: Auth API calls — login, register, profile, logout

@@ -1,3 +1,4 @@
+"use client";
 /**
  * FILE:    frontend/src/lib/api/properties.ts
  * PURPOSE: Property CRUD, image upload, save/unsave, amenities

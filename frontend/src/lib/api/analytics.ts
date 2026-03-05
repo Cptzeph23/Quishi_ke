@@ -1,3 +1,4 @@
+"use client";
 /**
  * FILE:    frontend/src/lib/api/analytics.ts
  * PURPOSE: Admin analytics — dashboard stats, property charts, audit log

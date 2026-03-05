@@ -1,3 +1,4 @@
+"use client";
 /**
  * FILE:    frontend/src/lib/api/chatbot.ts
  * PURPOSE: AI chatbot API — send messages, retrieve session history

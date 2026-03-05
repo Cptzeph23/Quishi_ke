@@ -1,3 +1,4 @@
+"use client";
 /**
  * FILE:    frontend/src/store/filterStore.ts
  * PURPOSE: Global property search filter state.

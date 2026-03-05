@@ -1,3 +1,4 @@
+"use client";
 /**
  * FILE:    frontend/src/lib/utils/index.ts
  * PURPOSE: Shared utilities — className merging, formatting, helpers
