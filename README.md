@@ -110,43 +110,28 @@ smart-realty/
         │
         ├── lib/
         │   ├── api/
-        │   │   ├── client.ts                ✅ Axios + silent JWT refresh
-        │   │   ├── auth.ts                  ✅ login, register, me, logout
-        │   │   ├── properties.ts            ✅ CRUD, featured, saved, images
-        │   │   ├── chatbot.ts               ✅ send, history
-        │   │   └── analytics.ts             ✅ dashboard, stats, audit logs
+        │   │   ├── client.ts                 Axios + silent JWT refresh
+        │   │   ├── auth.ts                   login, register, me, logout
+        │   │   ├── properties.ts             CRUD, featured, saved, images
+        │   │   ├── chatbot.ts                send, history
+        │   │   └── analytics.ts              dashboard, stats, audit logs
         │   ├── hooks/                       ← Phase C: useProperties, useAuth, useChat
         │   ├── types/
-        │   │   └── index.ts                 ✅ All TypeScript interfaces
+        │   │   └── index.ts                  All TypeScript interfaces
         │   └── utils/
-        │       └── index.ts                 ✅ cn(), formatPrice(), timeAgo()…
+        │       └── index.ts                  cn(), formatPrice(), timeAgo()…
         │
         ├── store/
-        │   ├── authStore.ts                 ✅ Zustand auth slice
-        │   └── filterStore.ts               ✅ Zustand filter slice
+        │   ├── authStore.ts                  Zustand auth slice
+        │   └── filterStore.ts                Zustand filter slice
         │
         └── styles/
-            └── globals.css                  ✅ Tailwind + CSS vars + component classes
+            └── globals.css                   Tailwind + CSS vars + component classes
 ```
 
 ---
 
 
-### 7. Redis + Celery (optional in Phase A — required in Phase F)
-
-```bash
-# Start Redis (macOS Homebrew)
-brew services start redis
-
-# Or Linux
-redis-server --daemonize yes
-
-# Start Celery worker (separate terminal)
-cd backend && source venv/bin/activate
-celery -A config worker -l info -c 2
-```
-
----
 
 ## API Quick Reference
 

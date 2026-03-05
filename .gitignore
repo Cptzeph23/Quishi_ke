@@ -156,6 +156,9 @@ desktop.ini
 quishi/
 venv/
 env/
+quishi
+/quishi
+
 
 # Node
 node_modules/
@@ -166,6 +169,7 @@ __pycache__/
 
 # NextJS
 .next/
+
 
 # environment variables
 .env
