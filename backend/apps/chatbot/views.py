@@ -20,7 +20,9 @@ class ChatView(APIView):
     GET /api/v1/chatbot/?session_id=<uuid>
     Returns: full session with message history
     """
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    # Chatbot is open to everyone — anonymous users get a session_key-based session.
+    # Authenticated users have their chat history tied to their account.
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         s = ChatInputSerializer(data=request.data)

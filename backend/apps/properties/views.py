@@ -123,10 +123,13 @@ class PropertyImageUploadView(APIView):
 
 
 class AmenityListView(generics.ListAPIView):
-    """GET /api/v1/properties/amenities/ — public list of all amenities."""
+    """GET /api/v1/properties/amenities/ — public plain list, no pagination.
+    Returns a JSON array directly. Amenities are a small static lookup.
+    """
     serializer_class   = AmenitySerializer
     queryset           = Amenity.objects.all()
     permission_classes = [permissions.AllowAny]
+    pagination_class   = None   # plain list, not paginated envelope
 
 
 class SavePropertyView(APIView):
