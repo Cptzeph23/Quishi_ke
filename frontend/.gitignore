@@ -1,0 +1,83 @@
+# ── Dependencies ─────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ── Next.js Build Output ──────────────────────────────────────────────────────
+.next/
+out/
+build/
+
+# ── Environment Variables ─────────────────────────────────────────────────────
+.env
+.quishi
+/quishi
+quishi.*
+venv/
+env/
+quishi/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Keep the example file
+!.env.example
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+coverage/
+.coverage
+*.lcov
+test-results/
+playwright-report/
+playwright/.cache/
+
+# ── TypeScript ────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Cache ─────────────────────────────────────────────────────────────────────
+.eslintcache
+.stylelintcache
+.cache/
+.parcel-cache/
+.turbo/
+
+# ── Package manager locks (keep ONE — delete the others) ──────────────────────
+# If you use npm:  keep package-lock.json, ignore yarn.lock & pnpm-lock.yaml
+# If you use yarn: keep yarn.lock, ignore package-lock.json & pnpm-lock.yaml
+yarn.lock
+pnpm-lock.yaml
+# package-lock.json  ← uncomment this line if you switch to yarn or pnpm
+
+# ── IDEs & Editors ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.pem
+.vercel
+.netlify
+
+
+node_modules/
+frontend/node_modules/
+backend/quishi/
+.env
+node_modules
