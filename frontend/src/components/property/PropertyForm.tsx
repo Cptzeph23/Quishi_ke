@@ -1,17 +1,19 @@
 "use client";
 /**
- * FILE:    PropertyForm.tsx
- * PURPOSE: Create / edit property form — all fields, amenity pills, used by
- *          agent create page and agent edit page.
+ * FILE:    frontend/src/components/property/PropertyForm.tsx
+ * PURPOSE: Create / edit property form — all fields, amenity pills, image upload.
+ *          On create: property is saved first, then images are uploaded separately.
  */
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Input }   from "@/components/ui/Input";
-import { Button }  from "@/components/ui/Button";
+import { Input }        from "@/components/ui/Input";
+import { Button }       from "@/components/ui/Button";
+import { ImageUpload }  from "@/components/property/ImageUpload";
 import { useAmenities, propertyKeys } from "@/lib/hooks/useProperties";
 import { propertiesApi } from "@/lib/api/properties";
 import { cn } from "@/lib/utils";
@@ -51,6 +53,8 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   const qc      = useQueryClient();
   const isEdit  = !!property;
   const { data: amenities = [] } = useAmenities();
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
 
   const { register, handleSubmit, watch, setValue,
           formState: { errors } } = useForm<FormValues>({
@@ -88,10 +92,27 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: FormValues) =>
-      isEdit
-        ? propertiesApi.update(property!.id, data)
-        : propertiesApi.create(data),
+    mutationFn: async (data: FormValues) => {
+      // Step 1: create or update the property
+      const saved = isEdit
+        ? await propertiesApi.update(property!.id, data)
+        : await propertiesApi.create(data);
+
+      // Step 2: upload images if any were selected
+      if (imageFiles.length > 0) {
+        setIsUploadingImages(true);
+        try {
+          await propertiesApi.uploadImages(saved.id, imageFiles);
+        } catch {
+          // Images failed but property was saved — warn rather than error
+          toast.error("Property saved, but some images failed to upload. You can add them later.");
+        } finally {
+          setIsUploadingImages(false);
+        }
+      }
+
+      return saved;
+    },
     onSuccess: () => {
       toast.success(isEdit ? "Listing updated!" : "Listing created!");
       qc.invalidateQueries({ queryKey: propertyKeys.all });
@@ -106,8 +127,25 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
     },
   });
 
+  const isPending = mutation.isPending || isUploadingImages;
+
   return (
     <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6">
+
+      {/* Images */}
+      <div className="card p-6 space-y-4">
+        <div>
+          <h2 className="font-semibold text-gray-900">Property photos</h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Add up to 10 photos. The first image will be the primary listing photo.
+          </p>
+        </div>
+        <ImageUpload
+          files={imageFiles}
+          onChange={setImageFiles}
+          maxFiles={10}
+        />
+      </div>
 
       {/* Listing details */}
       <div className="card p-6 space-y-5">
@@ -214,8 +252,10 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pb-8">
         <Button type="button" variant="secondary" onClick={() => router.back()}>Cancel</Button>
-        <Button type="submit" loading={mutation.isPending}>
-          {isEdit ? "Save changes" : "Create listing"}
+        <Button type="submit" loading={isPending}>
+          {isUploadingImages
+            ? "Uploading images…"
+            : isEdit ? "Save changes" : "Create listing"}
         </Button>
       </div>
     </form>

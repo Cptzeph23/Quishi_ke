@@ -1,27 +1,24 @@
 "use client";
 /**
  * FILE:    frontend/src/app/properties/[id]/page.tsx
- * PURPOSE: Full property detail — hero image, stats, amenities, agent info, save
+ * PURPOSE: Property detail — ImageSlider at top, then all property info below
  */
-import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowLeft, Bed, Bath, Maximize2, MapPin,
-  Heart, Eye, Share2, CheckCircle2, Phone, Mail,
+  Heart, Eye, Share2, CheckCircle2, Mail,
 } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { Spinner } from "@/components/ui/Spinner";
+import { Navbar }       from "@/components/layout/Navbar";
+import { Badge }        from "@/components/ui/Badge";
+import { Button }       from "@/components/ui/Button";
+import { Spinner }      from "@/components/ui/Spinner";
+import { ImageSlider }  from "@/components/property/ImageSlider";
 import { useProperty, useSaveProperty, useSavedProperties } from "@/lib/hooks/useProperties";
 import { formatPrice, formatArea, timeAgo, cn } from "@/lib/utils";
 
 export default function PropertyDetailPage() {
-  const { id }    = useParams<{ id: string }>();
-  const router    = useRouter();
-  const [imgIdx, setImgIdx] = useState(0);
+  const { id }  = useParams<{ id: string }>();
+  const router  = useRouter();
 
   const { data: property, isLoading, isError } = useProperty(id);
   const { data: saved = [] }                   = useSavedProperties();
@@ -51,8 +48,44 @@ export default function PropertyDetailPage() {
     );
   }
 
-  const images  = property.images ?? [];
-  const current = images[imgIdx];
+  const images = property.images ?? [];
+
+  /* Overlay slots for the slider */
+  const sliderLeft = (
+    <>
+      <Badge status={property.status}>{property.status}</Badge>
+      {property.is_featured && (
+        <span className="badge bg-amber-400/95 text-amber-900 border-amber-300">
+          ⭐ Featured
+        </span>
+      )}
+    </>
+  );
+
+  const sliderRight = (
+    <>
+      <button
+        className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center
+                   justify-center text-gray-500 hover:text-gray-900 transition-colors shadow-sm"
+        onClick={() => navigator.share?.({ title: property.title, url: location.href })}
+      >
+        <Share2 size={15} />
+      </button>
+      <button
+        onClick={() => toggleSave({ id: property.id, saved: isSaved })}
+        disabled={isPending}
+        className={cn(
+          "w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm",
+          "transition-all duration-200",
+          isSaved
+            ? "bg-red-500 text-white"
+            : "bg-white/90 text-gray-500 hover:bg-red-50 hover:text-red-500"
+        )}
+      >
+        <Heart size={15} className={isSaved ? "fill-current" : ""} />
+      </button>
+    </>
+  );
 
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
@@ -69,119 +102,60 @@ export default function PropertyDetailPage() {
           Back to listings
         </button>
 
+        {/* ── Image slider — full width above the grid ── */}
+        <div className="mb-8">
+          <ImageSlider
+            images={images}
+            title={property.title}
+            autoPlay
+            interval={4000}
+            overlayLeft={sliderLeft}
+            overlayRight={sliderRight}
+          />
+        </div>
+
+        {/* ── Two-column grid: details left, agent card right ── */}
         <div className="grid lg:grid-cols-3 gap-8">
 
-          {/* ── Left col: images + details ────────────────────────── */}
+          {/* Left col */}
           <div className="lg:col-span-2 space-y-6">
 
-            {/* Hero image */}
-            <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-gray-100 shadow-card">
-              {current ? (
-                <Image
-                  src={current.image}
-                  alt={current.alt_text || property.title}
-                  fill
-                  priority
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 66vw"
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl text-gray-200">🏠</span>
-                </div>
-              )}
-
-              {/* Status + Featured */}
-              <div className="absolute top-4 left-4 flex gap-2">
-                <Badge status={property.status}>{property.status}</Badge>
-                {property.is_featured && (
-                  <span className="badge bg-amber-400/95 text-amber-900 border-amber-300">
-                    ⭐ Featured
-                  </span>
-                )}
-              </div>
-
-              {/* Share + Save */}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button
-                  className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center
-                             justify-center text-gray-500 hover:text-gray-900 transition-colors"
-                  onClick={() => navigator.share?.({ title: property.title, url: location.href })}
-                >
-                  <Share2 size={15} />
-                </button>
-                <button
-                  onClick={() => toggleSave({ id: property.id, saved: isSaved })}
-                  disabled={isPending}
-                  className={cn(
-                    "w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center",
-                    "transition-all duration-200",
-                    isSaved
-                      ? "bg-red-500 text-white"
-                      : "bg-white/90 text-gray-500 hover:bg-red-50 hover:text-red-500"
-                  )}
-                >
-                  <Heart size={15} className={isSaved ? "fill-current" : ""} />
-                </button>
-              </div>
-            </div>
-
-            {/* Thumbnail strip */}
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {images.map((img, i) => (
-                  <button
-                    key={img.id}
-                    onClick={() => setImgIdx(i)}
-                    className={cn(
-                      "relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all",
-                      i === imgIdx ? "border-brand-500" : "border-transparent opacity-70 hover:opacity-100"
-                    )}
-                  >
-                    <Image src={img.thumbnail || img.image} alt={img.alt_text || ""} fill className="object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* Title + price */}
-            <div>
-              <div className="flex items-start justify-between gap-4 flex-wrap">
-                <div>
-                  <p className="text-xs font-semibold text-brand-600 uppercase tracking-widest mb-1">
-                    {property.property_type}
-                  </p>
-                  <h1 className="font-display text-2xl sm:text-3xl font-semibold text-gray-900 leading-tight">
-                    {property.title}
-                  </h1>
-                  <div className="flex items-center gap-1.5 mt-2 text-sm text-gray-500">
-                    <MapPin size={13} />
-                    {[property.house_number, property.address, property.neighborhood, property.city]
-                      .filter(Boolean).join(", ")}
-                  </div>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-xs font-semibold text-brand-600 uppercase tracking-widest mb-1">
+                  {property.property_type}
+                </p>
+                <h1 className="font-display text-2xl sm:text-3xl font-semibold text-gray-900 leading-tight">
+                  {property.title}
+                </h1>
+                <div className="flex items-center gap-1.5 mt-2 text-sm text-gray-500">
+                  <MapPin size={13} />
+                  {[property.house_number, property.address, property.neighborhood, property.city]
+                    .filter(Boolean).join(", ")}
                 </div>
-                <div className="text-right">
-                  <p className="font-display text-2xl font-semibold text-gray-900">
-                    {formatPrice(property.price, "KES")}
+              </div>
+              <div className="text-right">
+                <p className="font-display text-2xl font-semibold text-gray-900">
+                  {formatPrice(property.price, "KES")}
+                </p>
+                {property.price_per_sqm && (
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {formatPrice(property.price_per_sqm, "KES")}/m²
                   </p>
-                  {property.price_per_sqm && (
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {formatPrice(property.price_per_sqm, "KES")}/m²
-                    </p>
-                  )}
-                  {property.is_negotiable && (
-                    <p className="text-xs text-green-600 font-medium mt-0.5">Negotiable</p>
-                  )}
-                </div>
+                )}
+                {property.is_negotiable && (
+                  <p className="text-xs text-green-600 font-medium mt-0.5">Negotiable</p>
+                )}
               </div>
             </div>
 
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: Bed,      value: `${property.bedrooms} bed${property.bedrooms !== 1 ? "s" : ""}` },
-                { icon: Bath,     value: `${property.bathrooms} bath${property.bathrooms !== 1 ? "s" : ""}` },
-                { icon: Maximize2,value: formatArea(property.area_sqm) },
+                { icon: Bed,       value: `${property.bedrooms} bed${property.bedrooms !== 1 ? "s" : ""}` },
+                { icon: Bath,      value: `${property.bathrooms} bath${property.bathrooms !== 1 ? "s" : ""}` },
+                { icon: Maximize2, value: formatArea(property.area_sqm) },
               ].map(({ icon: Icon, value }) => (
                 <div key={value} className="card flex flex-col items-center gap-1.5 py-4 text-center">
                   <Icon size={18} className="text-brand-500" />
@@ -227,10 +201,8 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          {/* ── Right col: agent card + CTA ───────────────────────── */}
+          {/* Right col: agent card */}
           <div className="space-y-4">
-
-            {/* Agent card */}
             {property.listed_by && (
               <div className="card sticky top-24">
                 <h3 className="font-semibold text-gray-900 mb-4 text-sm">Listed by</h3>
@@ -241,7 +213,7 @@ export default function PropertyDetailPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 text-sm">{property.listed_by?.name}</p>
-                    <p className="text-xs text-gray-400 capitalize">Agent</p>
+                    <p className="text-xs text-gray-400">Agent</p>
                   </div>
                 </div>
 
@@ -255,7 +227,6 @@ export default function PropertyDetailPage() {
                       Email agent
                     </a>
                   )}
-
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-100">
