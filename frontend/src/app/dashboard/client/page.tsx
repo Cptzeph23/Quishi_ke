@@ -8,7 +8,7 @@ import { Heart, Search, MessageCircle, User } from "lucide-react";
 import { Navbar }    from "@/components/layout/Navbar";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { StatCard }     from "@/components/dashboard/StatCard";
+
 import { Spinner }      from "@/components/ui/Spinner";
 import { useSavedProperties } from "@/lib/hooks/useProperties";
 import { useAuthStore } from "@/store/authStore";
@@ -35,9 +35,21 @@ export default function ClientDashboard() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <StatCard label="Saved properties" value={saved.length} icon={Heart}         color="bg-red-50 text-red-400" />
-            <StatCard label="Searches today"   value="—"            icon={Search}        color="bg-blue-50 text-blue-500" />
-            <StatCard label="AI chats"         value="—"            icon={MessageCircle} color="bg-purple-50 text-purple-500" />
+            {[
+              { label: "Saved properties", value: saved.length, icon: Heart,         color: "bg-red-50    text-red-400"    },
+              { label: "Searches today",   value: "—",          icon: Search,        color: "bg-blue-50   text-blue-500"   },
+              { label: "AI chats",         value: "—",          icon: MessageCircle, color: "bg-purple-50 text-purple-500" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <div key={label} className="card p-5 flex flex-col gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+                  <Icon size={18} />
+                </div>
+                <div>
+                  <p className="font-display text-2xl font-semibold text-gray-900">{value}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{label}</p>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Quick actions */}

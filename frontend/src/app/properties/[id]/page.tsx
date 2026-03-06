@@ -237,16 +237,16 @@ export default function PropertyDetailPage() {
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-12 h-12 rounded-full bg-brand-100 flex items-center
                                   justify-center text-brand-700 text-lg font-semibold font-display">
-                    {property.listed_by.full_name.charAt(0).toUpperCase()}
+                    {(property.listed_by?.name ?? "A").charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 text-sm">{property.listed_by.full_name}</p>
-                    <p className="text-xs text-gray-400 capitalize">{property.listed_by.role}</p>
+                    <p className="font-semibold text-gray-900 text-sm">{property.listed_by?.name}</p>
+                    <p className="text-xs text-gray-400 capitalize">Agent</p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {property.listed_by.email && (
+                  {property.listed_by?.email && (
                     <a
                       href={`mailto:${property.listed_by.email}`}
                       className="btn-secondary text-sm gap-2 justify-center"
@@ -255,15 +255,7 @@ export default function PropertyDetailPage() {
                       Email agent
                     </a>
                   )}
-                  {property.listed_by.phone && (
-                    <a
-                      href={`tel:${property.listed_by.phone}`}
-                      className="btn-primary text-sm gap-2 justify-center"
-                    >
-                      <Phone size={14} />
-                      Call agent
-                    </a>
-                  )}
+
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-gray-100">
