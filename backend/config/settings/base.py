@@ -41,6 +41,7 @@ LOCAL_APPS = [
     "apps.accounts",
     "apps.properties",
     "apps.chatbot",
+    "apps.enquiries",
     "apps.analytics",
     "apps.audit",
 ]
@@ -83,14 +84,7 @@ TEMPLATES = [
 
 # ── Database ───────────────────────────────────────────────────────────────────
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default="5432"),
-    }
+    "default": env.db("DATABASE_URL", default="postgres://localhost/smart_realty")
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -207,6 +201,3 @@ USE_TZ        = True
 SECURE_BROWSER_XSS_FILTER   = True
 X_FRAME_OPTIONS             = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
-
-
-
