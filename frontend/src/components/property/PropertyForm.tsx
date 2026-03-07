@@ -29,6 +29,8 @@ const schema = z.object({
   neighborhood:  z.string().optional(),
   floor_number:  z.coerce.number().min(0),
   house_number:  z.string().min(1,  "Required"),
+  latitude:      z.coerce.number().min(-90).max(90).optional().or(z.literal("")),
+  longitude:     z.coerce.number().min(-180).max(180).optional().or(z.literal("")),
   bedrooms:      z.coerce.number().min(0),
   bathrooms:     z.coerce.number().min(1),
   area_sqm:      z.coerce.number().positive("Must be > 0"),
@@ -69,6 +71,8 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
       neighborhood:  property?.neighborhood  ?? "",
       floor_number:  property?.floor_number  ?? 0,
       house_number:  property?.house_number  ?? "",
+      latitude:      property?.latitude  ? Number(property.latitude)  : ("" as any),
+      longitude:     property?.longitude ? Number(property.longitude) : ("" as any),
       bedrooms:      property?.bedrooms      ?? 1,
       bathrooms:     property?.bathrooms     ?? 1,
       area_sqm:      property?.area_sqm ? Number(property.area_sqm) : (undefined as any),
@@ -210,6 +214,15 @@ export function PropertyForm({ property, onSuccess }: PropertyFormProps) {
             error={errors.floor_number?.message} {...register("floor_number")} />
           <Input label="Unit / house number" placeholder="e.g. 3B"
             error={errors.house_number?.message} {...register("house_number")} />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <Input label="Latitude (optional)" type="number" step="any"
+            placeholder="e.g. -1.2921"
+            hint="Pin the property on the map"
+            {...register("latitude")} />
+          <Input label="Longitude (optional)" type="number" step="any"
+            placeholder="e.g. 36.8219"
+            {...register("longitude")} />
         </div>
       </div>
 
