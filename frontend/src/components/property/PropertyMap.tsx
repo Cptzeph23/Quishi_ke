@@ -1,12 +1,11 @@
 "use client";
 /**
  * FILE:    frontend/src/components/property/PropertyMap.tsx
- * PURPOSE: Leaflet map embed for a property location. Uses OpenStreetMap tiles
- *          (no API key required). Falls back to a static placeholder if no
- *          coordinates are available.
+ * PURPOSE: Property location map using OpenStreetMap iframe embed.
+ *          Zero npm dependencies — no leaflet package required.
+ *          Falls back to a placeholder if no coordinates are set.
  */
-import { useEffect, useRef } from "react";
-import { MapPin } from "lucide-react";
+import { MapPin, ExternalLink } from "lucide-react";
 
 interface PropertyMapProps {
   latitude:  number;
@@ -16,70 +15,40 @@ interface PropertyMapProps {
 }
 
 export function PropertyMap({ latitude, longitude, title, address }: PropertyMapProps) {
-  const mapRef       = useRef<HTMLDivElement>(null);
-  const mapInstance  = useRef<any>(null);
+  const zoom      = 15;
+  const bbox      = 0.01; // ~1km bounding box
+  const embedUrl  =
+    `https://www.openstreetmap.org/export/embed.html` +
+    `?bbox=${longitude - bbox}%2C${latitude - bbox}%2C${longitude + bbox}%2C${latitude + bbox}` +
+    `&layer=mapnik` +
+    `&marker=${latitude}%2C${longitude}`;
 
-  useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
-
-    // Dynamically import Leaflet to avoid SSR issues
-    import("leaflet").then((L) => {
-      // Fix default icon paths broken by webpack
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconUrl:       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        shadowUrl:     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
-
-      const map = L.map(mapRef.current!, {
-        center:          [latitude, longitude],
-        zoom:            15,
-        scrollWheelZoom: false,
-        zoomControl:     true,
-      });
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(map);
-
-      L.marker([latitude, longitude])
-        .addTo(map)
-        .bindPopup(
-          `<div style="font-family:sans-serif;max-width:200px">
-             <strong style="font-size:13px">${title}</strong>
-             <p style="margin:4px 0 0;font-size:12px;color:#666">${address}</p>
-           </div>`,
-          { maxWidth: 220 }
-        )
-        .openPopup();
-
-      mapInstance.current = map;
-    });
-
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
-  }, [latitude, longitude, title, address]);
+  const linkUrl =
+    `https://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=${zoom}/${latitude}/${longitude}`;
 
   return (
-    <>
-      {/* Leaflet CSS */}
-      <link
-        rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        crossOrigin=""
-      />
-      <div
-        ref={mapRef}
-        className="w-full h-64 rounded-2xl overflow-hidden border border-[#E8E4DC] shadow-card z-0"
-        aria-label={`Map showing location of ${title}`}
-      />
-    </>
+    <div className="space-y-2">
+      <div className="relative w-full h-64 rounded-2xl overflow-hidden border border-[#E8E4DC] shadow-card">
+        <iframe
+          src={embedUrl}
+          title={`Map showing location of ${title}`}
+          className="w-full h-full border-0"
+          loading="lazy"
+          allowFullScreen
+          aria-label={`Map for ${address}`}
+        />
+      </div>
+      <a
+        href={linkUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-xs text-brand-600
+                   hover:text-brand-700 font-medium transition-colors"
+      >
+        <ExternalLink size={11} />
+        View larger map on OpenStreetMap
+      </a>
+    </div>
   );
 }
 
@@ -90,7 +59,7 @@ export function MapPlaceholder({ address }: { address: string }) {
                     flex flex-col items-center justify-center gap-2 text-gray-400">
       <MapPin size={28} className="text-gray-300" />
       <p className="text-sm font-medium text-gray-500">Location not pinned yet</p>
-      <p className="text-xs text-gray-400 max-w-xs text-center">{address}</p>
+      <p className="text-xs text-gray-400 max-w-xs text-center px-4">{address}</p>
     </div>
   );
 }
