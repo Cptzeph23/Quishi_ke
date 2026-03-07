@@ -47,6 +47,7 @@ def api_root(request):
                 "amenities": base + "properties/amenities/",
             },
             "chatbot":   base + "chatbot/",
+            "enquiries": base + "enquiries/",
             "analytics": {
                 "dashboard":    base + "analytics/dashboard/",
                 "properties":   base + "analytics/properties/",
@@ -68,6 +69,7 @@ urlpatterns = [
     path(V1 + "properties/", include("apps.properties.urls", namespace="properties")),
     path(V1 + "chatbot/",    include("apps.chatbot.urls",    namespace="chatbot")),
     path(V1 + "analytics/",  include("apps.analytics.urls",  namespace="analytics")),
+    path(V1 + "enquiries/",  include("apps.enquiries.urls")),
 
     # Interactive API docs
     path("api/schema/", SpectacularAPIView.as_view(),                          name="schema"),
