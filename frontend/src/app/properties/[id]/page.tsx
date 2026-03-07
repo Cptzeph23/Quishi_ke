@@ -1,18 +1,20 @@
 "use client";
 /**
  * FILE:    frontend/src/app/properties/[id]/page.tsx
- * PURPOSE: Property detail — ImageSlider at top, then all property info below
+ * PURPOSE: Property detail — image slider, full info, map, enquiry form
  */
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, Bed, Bath, Maximize2, MapPin,
-  Heart, Eye, Share2, CheckCircle2, Mail,
+  Heart, Eye, Share2, CheckCircle2,
 } from "lucide-react";
-import { Navbar }       from "@/components/layout/Navbar";
-import { Badge }        from "@/components/ui/Badge";
-import { Button }       from "@/components/ui/Button";
-import { Spinner }      from "@/components/ui/Spinner";
-import { ImageSlider }  from "@/components/property/ImageSlider";
+import { Navbar }        from "@/components/layout/Navbar";
+import { Badge }         from "@/components/ui/Badge";
+import { Button }        from "@/components/ui/Button";
+import { Spinner }       from "@/components/ui/Spinner";
+import { ImageSlider }   from "@/components/property/ImageSlider";
+import { PropertyMap, MapPlaceholder } from "@/components/property/PropertyMap";
+import { EnquiryForm }   from "@/components/property/EnquiryForm";
 import { useProperty, useSaveProperty, useSavedProperties } from "@/lib/hooks/useProperties";
 import { formatPrice, formatArea, timeAgo, cn } from "@/lib/utils";
 
@@ -48,16 +50,19 @@ export default function PropertyDetailPage() {
     );
   }
 
-  const images = property.images ?? [];
+  const images    = property.images ?? [];
+  const hasCoords = property.latitude && property.longitude;
+  const fullAddress = [
+    property.house_number, property.address,
+    property.neighborhood, property.city,
+  ].filter(Boolean).join(", ");
 
-  /* Overlay slots for the slider */
+  /* Slider overlay */
   const sliderLeft = (
     <>
       <Badge status={property.status}>{property.status}</Badge>
       {property.is_featured && (
-        <span className="badge bg-amber-400/95 text-amber-900 border-amber-300">
-          ⭐ Featured
-        </span>
+        <span className="badge bg-amber-400/95 text-amber-900 border-amber-300">⭐ Featured</span>
       )}
     </>
   );
@@ -92,32 +97,27 @@ export default function PropertyDetailPage() {
       <Navbar />
 
       <main className="page-container py-8">
-        {/* Back nav */}
-        <button
-          onClick={() => router.back()}
+        {/* Back */}
+        <button onClick={() => router.back()}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900
-                     mb-6 transition-colors group"
-        >
+                     mb-6 transition-colors group">
           <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
           Back to listings
         </button>
 
-        {/* ── Image slider — full width above the grid ── */}
+        {/* Image slider */}
         <div className="mb-8">
           <ImageSlider
-            images={images}
-            title={property.title}
-            autoPlay
-            interval={4000}
-            overlayLeft={sliderLeft}
-            overlayRight={sliderRight}
+            images={images} title={property.title}
+            autoPlay interval={4000}
+            overlayLeft={sliderLeft} overlayRight={sliderRight}
           />
         </div>
 
-        {/* ── Two-column grid: details left, agent card right ── */}
+        {/* Two-column layout */}
         <div className="grid lg:grid-cols-3 gap-8">
 
-          {/* Left col */}
+          {/* ── Left col ── */}
           <div className="lg:col-span-2 space-y-6">
 
             {/* Title + price */}
@@ -130,9 +130,7 @@ export default function PropertyDetailPage() {
                   {property.title}
                 </h1>
                 <div className="flex items-center gap-1.5 mt-2 text-sm text-gray-500">
-                  <MapPin size={13} />
-                  {[property.house_number, property.address, property.neighborhood, property.city]
-                    .filter(Boolean).join(", ")}
+                  <MapPin size={13} />{fullAddress}
                 </div>
               </div>
               <div className="text-right">
@@ -150,7 +148,7 @@ export default function PropertyDetailPage() {
               </div>
             </div>
 
-            {/* Stats row */}
+            {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: Bed,       value: `${property.bedrooms} bed${property.bedrooms !== 1 ? "s" : ""}` },
@@ -178,70 +176,62 @@ export default function PropertyDetailPage() {
                 <h2 className="font-semibold text-gray-900 mb-3">Amenities</h2>
                 <div className="flex flex-wrap gap-2">
                   {property.amenities.map((a) => (
-                    <span
-                      key={a.id}
+                    <span key={a.id}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                 bg-brand-50 text-brand-700 text-xs font-medium border border-brand-100"
-                    >
-                      <CheckCircle2 size={12} />
-                      {a.name}
+                                 bg-brand-50 text-brand-700 text-xs font-medium border border-brand-100">
+                      <CheckCircle2 size={12} />{a.name}
                     </span>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* ── Map ── */}
+            <div className="card">
+              <h2 className="font-semibold text-gray-900 mb-4">Location</h2>
+              {hasCoords ? (
+                <PropertyMap
+                  latitude={Number(property.latitude)}
+                  longitude={Number(property.longitude)}
+                  title={property.title}
+                  address={fullAddress}
+                />
+              ) : (
+                <MapPlaceholder address={fullAddress} />
+              )}
+            </div>
+
             {/* Meta */}
-            <div className="flex items-center gap-4 text-xs text-gray-400 pt-2">
+            <div className="flex items-center gap-4 text-xs text-gray-400 pt-1">
               <span className="flex items-center gap-1">
-                <Eye size={12} />
-                {property.views_count} views
+                <Eye size={12} />{property.views_count} views
               </span>
               <span>Listed {timeAgo(property.created_at)}</span>
             </div>
           </div>
 
-          {/* Right col: agent card */}
+          {/* ── Right col ── */}
           <div className="space-y-4">
-            {property.listed_by && (
-              <div className="card sticky top-24">
-                <h3 className="font-semibold text-gray-900 mb-4 text-sm">Listed by</h3>
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-12 h-12 rounded-full bg-brand-100 flex items-center
-                                  justify-center text-brand-700 text-lg font-semibold font-display">
-                    {(property.listed_by?.name ?? "A").charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{property.listed_by?.name}</p>
-                    <p className="text-xs text-gray-400">Agent</p>
-                  </div>
-                </div>
 
-                <div className="flex flex-col gap-2">
-                  {property.listed_by?.email && (
-                    <a
-                      href={`mailto:${property.listed_by.email}`}
-                      className="btn-secondary text-sm gap-2 justify-center"
-                    >
-                      <Mail size={14} />
-                      Email agent
-                    </a>
-                  )}
-                </div>
+            {/* Save button (standalone if no agent) */}
+            <div className="card p-4">
+              <Button
+                variant={isSaved ? "danger" : "secondary"}
+                fullWidth
+                onClick={() => toggleSave({ id: property.id, saved: isSaved })}
+                disabled={isPending}
+                leftIcon={<Heart size={14} className={isSaved ? "fill-current" : ""} />}
+              >
+                {isSaved ? "Saved" : "Save property"}
+              </Button>
+            </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <Button
-                    variant={isSaved ? "danger" : "secondary"}
-                    fullWidth
-                    onClick={() => toggleSave({ id: property.id, saved: isSaved })}
-                    disabled={isPending}
-                    leftIcon={<Heart size={14} className={isSaved ? "fill-current" : ""} />}
-                  >
-                    {isSaved ? "Saved" : "Save property"}
-                  </Button>
-                </div>
-              </div>
-            )}
+            {/* Enquiry form */}
+            <EnquiryForm
+              propertyId={property.id}
+              propertyTitle={property.title}
+              agentName={property.listed_by?.name}
+            />
           </div>
         </div>
       </main>
