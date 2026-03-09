@@ -1,14 +1,42 @@
 "use client";
 /**
  * FILE:    frontend/src/store/authStore.ts
- * PURPOSE: Global auth state — uses zustand persist middleware for SSR-safe
- *          localStorage access. No manual localStorage calls anywhere.
+ * PURPOSE: Global auth state with zustand persist.
+ *          Also writes a "smartrealty-auth" cookie so Next.js middleware
+ *          can read auth state server-side without a Node.js API.
  */
-"use client";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/lib/types";
 import { authApi } from "@/lib/api/auth";
+
+// ── Cookie helpers (Edge-compatible) ─────────────────────────────────────────
+
+function setCookie(name: string, value: string, days = 7) {
+  if (typeof document === "undefined") return;
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+}
+
+function syncCookie(state: Partial<AuthState>) {
+  // Write a compact version of auth state to cookie for middleware
+  const payload = {
+    accessToken: state.accessToken ?? null,
+    user:        state.user ? { role: state.user.role, id: state.user.id } : null,
+  };
+  if (payload.accessToken) {
+    setCookie("smartrealty-auth", JSON.stringify({ state: payload }));
+  } else {
+    deleteCookie("smartrealty-auth");
+  }
+}
+
+// ── Store ─────────────────────────────────────────────────────────────────────
 
 interface AuthState {
   user:            User | null;
@@ -33,14 +61,15 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email, password) => {
         const data = await authApi.login(email, password);
-        set({
+        const next = {
           user:            data.user,
           accessToken:     data.access,
           refreshToken:    data.refresh,
           isAuthenticated: true,
           isLoading:       false,
-        });
-        // Also keep in localStorage for the axios interceptor
+        };
+        set(next);
+        syncCookie(next);
         if (typeof window !== "undefined") {
           localStorage.setItem("access_token",  data.access);
           localStorage.setItem("refresh_token", data.refresh);
@@ -56,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
         }
+        deleteCookie("smartrealty-auth");
         set({
           user:            null,
           accessToken:     null,
@@ -66,7 +96,6 @@ export const useAuthStore = create<AuthState>()(
       },
 
       hydrate: async () => {
-        // Sync persisted tokens to localStorage for the axios interceptor
         const { accessToken, refreshToken } = get();
         if (typeof window !== "undefined") {
           if (accessToken)  localStorage.setItem("access_token",  accessToken);
@@ -80,13 +109,15 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const user = await authApi.me();
-          set({ user, isAuthenticated: true, isLoading: false });
+          const next = { user, isAuthenticated: true, isLoading: false };
+          set(next);
+          syncCookie({ ...next, accessToken });
         } catch {
-          // Token expired and refresh failed — clear everything
           if (typeof window !== "undefined") {
             localStorage.removeItem("access_token");
             localStorage.removeItem("refresh_token");
           }
+          deleteCookie("smartrealty-auth");
           set({
             user:            null,
             accessToken:     null,
@@ -100,16 +131,10 @@ export const useAuthStore = create<AuthState>()(
     {
       name:    "smartrealty-auth",
       storage: createJSONStorage(() =>
-        // Safe SSR fallback — returns a no-op storage on the server
         typeof window !== "undefined"
           ? localStorage
-          : {
-              getItem:    () => null,
-              setItem:    () => {},
-              removeItem: () => {},
-            }
+          : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
       ),
-      // Only persist tokens — not loading state
       partialize: (s) => ({
         accessToken:  s.accessToken,
         refreshToken: s.refreshToken,
