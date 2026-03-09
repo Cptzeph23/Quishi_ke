@@ -5,7 +5,8 @@
 import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 import "@/styles/globals.css";
-import { Providers } from "./providers";
+import { Providers }      from "./providers";
+import { AIChatBubble }   from "@/components/layout/AIChatBubble";
 
 const dmSans = DM_Sans({
   subsets:  ["latin"],
@@ -49,7 +50,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-[#FAFAF8] font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <AIChatBubble />
+        </Providers>
       </body>
     </html>
   );
