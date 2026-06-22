@@ -22,12 +22,13 @@ const STATS = [
 
 const PROPERTY_TYPES = [
   { emoji: "🏢", label: "Apartment", value: "apartment" },
-  { emoji: "🏠", label: "House",     value: "house"     },
+  { emoji: "", label: "House",     value: "house"     },
   { emoji: "🏙️", label: "Studio",    value: "studio"    },
   { emoji: "🏰", label: "Penthouse", value: "penthouse" },
   { emoji: "💼", label: "Office",    value: "office"    },
   { emoji: "🌿", label: "Land",      value: "land"      },
 ];
+
 
 export default function HomePage() {
   const router     = useRouter();
